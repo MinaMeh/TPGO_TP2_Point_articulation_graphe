@@ -1,76 +1,53 @@
+package Noyau;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Stack;
 
 
-public class Graphe  implements Cloneable{
+public class Graphe  {
 	private ArrayList<Noeud> noeuds;
 	private int nbNoeuds=0;
 	
-	public Graphe(){
-		
+	public Graphe(){		
+		this.noeuds=new ArrayList<Noeud>();
 	}
+	
 	public Graphe(ArrayList<Noeud> noeuds) {
 		super();
 		this.noeuds = noeuds;
 		this.nbNoeuds+=noeuds.size();
 	}
-	public Graphe clone(){
-		try {
-			ArrayList<ArrayList<Noeud>> listVoisins = new ArrayList< ArrayList<Noeud>>();
-			
-   		for(int i =0 ; i<this.nbNoeuds;i++) {
-			System.out.println("i= "+i+"valeur"+this.getNoeud(i));
-			listVoisins.add(new ArrayList<Noeud>());
-   				Noeud old=this.getNoeud(i);
-   				Integer num=new Integer(this.getNoeud(i).getNum());
-   				Noeud noeud=(Noeud) this.getNoeud(i).clone();
-   			
-   				for (int j=0;j<old.getVoisins().size();j++){
-   				//	System.out.println("j= "+j+"valeur"+this.getNoeud(1));
-
-   					listVoisins.get(i).add(old.getVoisin(j));
-   				}
-   				noeud.setVoisins(listVoisins.get(i));
-   				System.out.println("cloned   "+noeud);
-   				noeuds.add(noeud);
-			    }
-		Graphe graphe=  new Graphe(noeuds);
-
-			return graphe;
-			}
-			catch (CloneNotSupportedException e){
-				throw new InternalError();
-			}
-	}
-
+	//retourne les noeuds du graphe
 	public ArrayList<Noeud> getNoeuds() {
-		return noeuds;
+		return this.noeuds;
 	}
-
+//ajouter  la liste des noeuds @noeuds au graphe
 	public void setNoeuds(ArrayList<Noeud> noeuds) {
 		this.noeuds = noeuds;
 	}
-	
+	//ajouter le noeud @n au graphe
 	public void addNoeud(Noeud n){
 		this.noeuds.add(n);
 		this.nbNoeuds++;
 		}
+	//supprimer le noeud @noeud du graphe
 	public void deleteNoeud(Noeud noeud){
-		/*Graphe old=(Graphe)this.clone();
-		System.out.println("before "+old.getNoeuds());*/
-
+		
 		ArrayList<Noeud> voisins=noeud.getVoisins();
 		for (int j=0;j<voisins.size();j++){
 			voisins.get(j).deleteVoisin( noeud);
 		}
 		
 		
-		for(int i=noeud.getNum()+1;i<nbNoeuds;i++){
+		for(int i=noeud.getNum()+1;i<this.getNoeuds().size();i++){
 			this.getNoeud(i).setNum(this.getNoeud(i).getNum()-1);
 		}
 		this.noeuds.remove(noeud);
+		noeud.getStackpane().getChildren().remove(0);
+		noeud.getStackpane().getChildren().remove(1);
+
 		this.nbNoeuds--;
 		Collections.sort(this.getNoeuds(), new Comparator<Noeud>() {
 	        @Override
@@ -82,13 +59,17 @@ public class Graphe  implements Cloneable{
 	    });
 		//return old;
 	}
+	//retourne le nombre de noeuds du graphe
 	public int getNbNoeuds(){
 		return this.nbNoeuds;
 	}
+	
+	//retourne la le ième noeud du graphe
 	public Noeud getNoeud(int i){
 
 		return this.noeuds.get(i);
 	}
+	//retourne le noeud dont son numéro est @n
 	public Noeud getNoeudNum(int n){
 		for (int i=0; i<this.getNoeuds().size();i++){
 			if (this.getNoeud(i).getNum()==n)
@@ -96,9 +77,10 @@ public class Graphe  implements Cloneable{
 		}
 		return null;
 	}
+	//restaurer le noeud @noeud après l'avoir supprimer
 	public  void restoreNoeud(Noeud noeud){
 
-		for(int i=noeud.getNum();i<nbNoeuds;i++){
+		for(int i=noeud.getNum();i<this.getNoeuds().size();i++){
 			this.getNoeud(i).setNum(this.getNoeud(i).getNum()+1);
 		}
 
@@ -118,44 +100,43 @@ public class Graphe  implements Cloneable{
 	        }
 	    });
 	}
-	
+	// le parcours DFS du graphe à partir du noeud @noeud
 	public Boolean[] DFS(Noeud noeud){
-
+		//la pile des noeuds visités
 		Stack<Noeud> p=new Stack<Noeud>();
 		Boolean[] visited=new Boolean[this.nbNoeuds];
+		//Au début tous les noeuds ne sont pas visités
 		for (int i=0;i<this.nbNoeuds;i++){
 			visited[i]=false;
 		}
 		Noeud n=noeud;
+		//empliler le noeud racine
 		p.push(n);
 		while(!p.empty()){
+			//dépiler un noeud
 			n=(Noeud) p.pop();
-
-			//System.out.println("le noeud en cours"+n.getNum()+"valeur de visited"+visited[n.getNum()]);
-
+			//si le noeud n'est pas visité
 			if (!visited[n.getNum()]){
-
-				visited[n.getNum()]=true;
-
+				visited[n.getNum()]=true; //marquer le noeud comme visité
 				for (int i=0;i<n.getVoisins().size();i++){
-
 					if (!visited[n.getVoisin(i).getNum()]){
+						//empiler ses voisins
 						p.push(n.getVoisin(i));
-
 					}
 				}
 			}
 		}
-		
 		return visited;	
 	}
+	
+	//retourne une liste des composantes fortement connexes du graphe
 	public ArrayList<ArrayList<Noeud>> getSCC(){
-		 ArrayList<ArrayList<Noeud>> SCC =new   ArrayList<ArrayList<Noeud>>();
-		 ArrayList<Noeud> notVisited=new   ArrayList<Noeud>();
+		 ArrayList<ArrayList<Noeud>> SCC =new   ArrayList<ArrayList<Noeud>>(); //contient la liste des composantes fortement connexes
+		 ArrayList<Noeud> notVisited=new   ArrayList<Noeud>(); //contient la liste des noeuds non encore visités
+		 SCC.add(new ArrayList<Noeud>());
 		for (int i=0; i < this.getNoeuds().size();i++){
-			notVisited.add(this.getNoeud(i));
+			notVisited.add(this.getNoeud(i)); //au début tous les noeuds ne sont pas visités
 		}
-		
 		 Noeud racine=this.getNoeud(0); //noeud racine
 		 int nbSCC=0; //nbr de composantes fortement connexes
 		 int nbVisited=0; //nbr de noeuds visités
@@ -166,12 +147,15 @@ public class Graphe  implements Cloneable{
 			 Boolean[] visited=this.DFS(racine);
 			 for (int i=0;i<visited.length;i++){
 				 if (visited[i]) nbVisited++;}
-			 		
-				 if (this.getNoeuds().size()!=nbVisited) SCC.add(new ArrayList<Noeud>());
+	
+				 if (this.getNoeuds().size()!=nbVisited) {
+					 SCC.add(new ArrayList<Noeud>());};
 				 for (int i=0;i<visited.length;i++){
 				 if (visited[i]){
 
-					// System.out.println(this.getNoeud(i)+"  "+this.getNoeud(i).getVoisins());
+				//	 System.out.println(this.getNoeud(i)+"  "+this.getNoeud(i).getVoisins());
+				//	 System.out.println("i= "+i +"scc= "+ nbSCC+ "noeud= "+this.getNoeud(i));
+					 	
 					 		SCC.get(nbSCC).add(this.getNoeud(i));
 					 		nbVisited++;
 					 		notVisited.remove(this.getNoeud(i));
@@ -192,6 +176,26 @@ public class Graphe  implements Cloneable{
 				 racine=notVisited.get(0);
 			 }	
 		return SCC;
+		
+	}
+	public ArrayList<Noeud> ptsArticulation(){
+		ArrayList <Noeud> noeuds=new ArrayList<Noeud>();
+		int nbSCC=this.getSCC().size(); //nombre de composantes connexes initial
+		int nbSCCsup; //nombre de composante connexes après la suppression d'un noeud
+		Noeud n;
+		for (int i=0;i<this.getNoeuds().size();i++){
+			n=this.getNoeud(i);
+
+			this.deleteNoeud(this.getNoeud(i));
+		//	System.out.println("n"+n);
+
+			nbSCCsup=this.getSCC().size();
+		//	System.out.println("nbSCCsup"+i+" est "+nbSCCsup);
+			if (nbSCCsup>nbSCC)  noeuds.add(n);
+			this.restoreNoeud(n);
+		//	System.out.println("after restore    "+this.getNoeuds());
+		}
+		return noeuds;
 		
 	}
 
